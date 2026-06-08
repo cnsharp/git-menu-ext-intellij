@@ -1,0 +1,21 @@
+<idea-plugin>
+    <id>com.cnsharp.git-menu-ext</id>
+    <name>Git Menu Ext</name>
+    <vendor email="support@cnsharp.com" url="https://www.cnsharp.com">CNSharp</vendor>
+    <description>Extends the Git menu with additional branch management actions.</description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>Git4Idea</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+    </extensions>
+
+    <actions>
+        <action id="com.cnsharp.gitmenuext.DeleteBranchesAction"
+                class="com.cnsharp.gitmenuext.DeleteBranchesAction"
+                text="Delete Branches..."
+                description="Delete local branches matching a keyword">
+            <add-to-group group-id="Git.MainMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>
