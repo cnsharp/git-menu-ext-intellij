@@ -42,20 +42,16 @@ Exports all files changed between a range of commits in Git Log.
 
 **Location:** Git Log context menu → Export Changed Files...
 
-1. Select 2 or more commits in the Git Log (Ctrl/Cmd+click or drag to select a range)
+1. Select 2 commits in the Git Log (Ctrl/Cmd+click or drag to select a range)
 2. Right-click → Export Changed Files...
 3. Configure:
-   - **File extensions**: filter by extension (e.g. `cs ts js`), leave empty for all files
+   - **File extensions**: filter by extension (e.g. `vue ts js`), leave empty for all files
    - **Output directory**: where to export
    - **Export as zip**: pack into a zip archive, or copy as a directory tree
 4. The output is named `{project}-{oldestHash}-{newestHash}.zip` (or directory)
 
 ![Export Changed Files](screenshots/export-changes.png)
 
-Works correctly when:
-- The oldest selected commit is the repository's initial commit
-- The git root differs from the project directory (monorepo, subdirectory projects)
-- More than 2 commits are selected
 
 ## Requirements
 
