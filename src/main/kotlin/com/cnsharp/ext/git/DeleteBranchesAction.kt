@@ -1,5 +1,6 @@
 package com.cnsharp.ext.git
 
+import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
@@ -16,6 +17,8 @@ import java.awt.Dimension
 import javax.swing.JComponent
 import javax.swing.JPanel
 
+private const val KEY_KEYWORD = "com.cnsharp.ext.git.DeleteBranches.keyword"
+
 class DeleteBranchesAction : AnAction() {
 
     override fun actionPerformed(e: AnActionEvent) {
@@ -24,6 +27,7 @@ class DeleteBranchesAction : AnAction() {
         if (dialog.showAndGet()) {
             val keyword = dialog.keyword.trim()
             if (keyword.isNotEmpty()) {
+                PropertiesComponent.getInstance().setValue(KEY_KEYWORD, keyword)
                 deleteBranches(project, keyword)
             }
         }
@@ -80,7 +84,7 @@ class DeleteBranchesAction : AnAction() {
                     if (!confirmed) return
 
                     indicator.text = "Deleting branches..."
-                    val result = runGit(*( listOf("git", "branch", "-D") + branchList).toTypedArray(), dir = basePath)
+                    val result = runGit(*(listOf("git", "branch", "-D") + branchList).toTypedArray(), dir = basePath)
 
                     refreshGitRepos(project)
 
@@ -103,10 +107,11 @@ class DeleteBranchesAction : AnAction() {
 
 class DeleteBranchesDialog(project: Project) : DialogWrapper(project) {
 
-    private val textField = JBTextField(30)
+    private val textField = JBTextField(30).apply {
+        text = PropertiesComponent.getInstance().getValue(KEY_KEYWORD, "")
+    }
 
-    val keyword: String
-        get() = textField.text
+    val keyword: String get() = textField.text
 
     init {
         title = "Delete Branches"
