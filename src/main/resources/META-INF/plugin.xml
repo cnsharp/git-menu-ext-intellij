@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.cnsharp.git-menu-ext</id>
     <name>Git Menu Ext</name>
-    <vendor email="support@cnsharp.com" url="https://www.cnsharp.com">CNSharp</vendor>
+    <vendor email="support@cnsharp.com" url="https://www.cnsharp.com">CnSharp Studio</vendor>
     <description>Extends the Git menu with additional branch management actions.</description>
 
     <depends>com.intellij.modules.platform</depends>
@@ -11,11 +11,19 @@
     </extensions>
 
     <actions>
-        <action id="com.cnsharp.gitmenuext.DeleteBranchesAction"
-                class="com.cnsharp.gitmenuext.DeleteBranchesAction"
+        <action id="com.cnsharp.ext.git.DeleteBranchesAction"
+                class="com.cnsharp.ext.git.DeleteBranchesAction"
                 text="Delete Branches..."
                 description="Delete local branches matching a keyword">
-            <add-to-group group-id="Git.MainMenu" anchor="last"/>
+            <add-to-group group-id="Git.MainMenu" anchor="after" relative-to-action="Git.Reset"/>
+            <add-to-group group-id="GitRepositoryActions" anchor="after" relative-to-action="Git.Reset"/>
+        </action>
+        <action id="com.cnsharp.ext.git.DeleteOutdatedBranchesAction"
+                class="com.cnsharp.ext.git.DeleteOutdatedBranchesAction"
+                text="Delete Outdated Branches..."
+                description="Delete local branches that have no tracking remote">
+            <add-to-group group-id="Git.MainMenu" anchor="after" relative-to-action="com.cnsharp.ext.git.DeleteBranchesAction"/>
+            <add-to-group group-id="GitRepositoryActions" anchor="after" relative-to-action="com.cnsharp.ext.git.DeleteBranchesAction"/>
         </action>
     </actions>
 </idea-plugin>
