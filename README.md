@@ -4,6 +4,8 @@ IntelliJ Platform plugin that adds extra Git actions for branch management and f
 
 Compatible with all IntelliJ-based IDEs (IntelliJ IDEA, Rider, GoLand, WebStorm, etc.).
 
+![Git Menu Extensions](screenshots/git-menu-extensions.png)
+
 ## Features
 
 ### Delete Branches
@@ -47,6 +49,8 @@ Exports all files changed between a range of commits in Git Log.
    - **Output directory**: where to export
    - **Export as zip**: pack into a zip archive, or copy as a directory tree
 4. The output is named `{project}-{oldestHash}-{newestHash}.zip` (or directory)
+
+![Export Changed Files](screenshots/export-changes.png)
 
 Works correctly when:
 - The oldest selected commit is the repository's initial commit
