@@ -16,6 +16,7 @@ import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBTextField
 import com.intellij.vcs.log.VcsLogDataKeys
+import git4idea.repo.GitRepositoryManager
 import java.awt.Dimension
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -37,7 +38,13 @@ class ExportChangedFilesAction : AnAction() {
         val selection = e.getData(VcsLogDataKeys.VCS_LOG_COMMIT_SELECTION) ?: return
         val commits = selection.commits
         if (commits.size < 2) return
-        val basePath = project.basePath ?: return
+
+        // Use the commit's own root for reliable git directory detection.
+        // project.basePath may differ from the git root (e.g. opened a subdirectory, monorepo).
+        val gitRoot = commits[0].root.path.ifEmpty {
+            GitRepositoryManager.getInstance(project).repositories.firstOrNull()?.root?.path
+                ?: project.basePath ?: return
+        }
         val hashes = commits.map { it.hash.asString() }
 
         ApplicationManager.getApplication().invokeLater {
@@ -58,19 +65,25 @@ class ExportChangedFilesAction : AnAction() {
                 override fun run(indicator: ProgressIndicator) {
                     try {
                         indicator.text = "Resolving commit range..."
-                        val logResult = runGit("git", "log", "--oneline", *hashes.toTypedArray(), dir = basePath)
-                        val orderedHashes = logResult.output.lines()
-                            .map { it.trim().split(" ").first() }
-                            .filter { h -> hashes.any { it.startsWith(h) || h.startsWith(it.take(7)) } }
-
-                        val newest = orderedHashes.firstOrNull() ?: hashes[0]
-                        val oldest = orderedHashes.lastOrNull() ?: hashes[1]
+                        // Sort all selected commits topologically by passing them all to git log.
+                        // Filter output to only the selected hashes; first = newest, last = oldest.
+                        val hashSet = hashes.toSet()
+                        val logResult = runGit(
+                            "git", "log", "--format=%H", "--topo-order", *hashes.toTypedArray(),
+                            dir = gitRoot
+                        )
+                        val ordered = logResult.output.lines().filter { it in hashSet }
+                        val newest = ordered.firstOrNull() ?: hashes[0]
+                        val oldest = ordered.lastOrNull() ?: hashes.last()
 
                         indicator.text = "Collecting changed files..."
+                        // Check if oldest commit has a parent; if not (initial commit), use empty tree
+                        val hasParent = runGit("git", "rev-parse", "--verify", "${oldest}^", dir = gitRoot).exitCode == 0
+                        val base = if (hasParent) "${oldest}~1" else "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
                         val diffResult = runGit(
                             "git", "diff", "--name-only", "--diff-filter=ACMR",
-                            "${oldest}~1", newest,
-                            dir = basePath
+                            base, newest,
+                            dir = gitRoot
                         )
 
                         if (diffResult.exitCode != 0 || diffResult.output.isEmpty()) {
@@ -102,7 +115,7 @@ class ExportChangedFilesAction : AnAction() {
                             ZipOutputStream(zipFile.outputStream().buffered()).use { zip ->
                                 for (relativePath in filteredFiles) {
                                     indicator.text = "Adding: $relativePath"
-                                    val file = File(basePath, relativePath)
+                                    val file = File(gitRoot, relativePath)
                                     if (!file.exists()) continue
                                     zip.putNextEntry(ZipEntry(relativePath))
                                     file.inputStream().use { it.copyTo(zip) }
@@ -117,7 +130,7 @@ class ExportChangedFilesAction : AnAction() {
                             val destRoot = File(outputDir, "${projectName}-${shortOldest}-${shortNewest}")
                             for (relativePath in filteredFiles) {
                                 indicator.text = "Copying: $relativePath"
-                                val src = File(basePath, relativePath)
+                                val src = File(gitRoot, relativePath)
                                 if (!src.exists()) continue
                                 val dest = File(destRoot, relativePath)
                                 dest.parentFile?.mkdirs()
