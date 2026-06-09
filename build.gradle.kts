@@ -14,7 +14,8 @@ repositories {
 intellij {
     version.set("2024.1")
     type.set("IC")
-    plugins.set(listOf("git4idea"))
+    plugins.set(listOf("vcs-git"))
+    instrumentCode.set(false)
 }
 
 tasks {
@@ -27,6 +28,6 @@ tasks {
     }
     patchPluginXml {
         sinceBuild.set("241")
-        untilBuild.set("251.*")
+        untilBuild.set("")
     }
 }
