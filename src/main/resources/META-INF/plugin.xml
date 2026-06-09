@@ -2,7 +2,14 @@
     <id>com.cnsharp.git-menu-ext</id>
     <name>Git Menu Ext</name>
     <vendor email="support@cnsharp.com" url="https://www.cnsharp.com">CnSharp Studio</vendor>
-    <description>Extends the Git menu with additional branch management actions.</description>
+    <description><![CDATA[
+        Extends the Git menu with additional branch management actions:
+        <ul>
+            <li><b>Delete Branches</b>: delete local branches matching a keyword</li>
+            <li><b>Delete Outdated Branches</b>: list and delete local branches that have no tracking remote or whose remote is gone</li>
+            <li><b>Export Changed Files</b>: select two commits in Git Log, export all changed files between them (with optional extension filter)</li>
+        </ul>
+    ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>Git4Idea</depends>
@@ -24,6 +31,12 @@
                 description="Delete local branches that have no tracking remote">
             <add-to-group group-id="Git.MainMenu" anchor="after" relative-to-action="com.cnsharp.ext.git.DeleteBranchesAction"/>
             <add-to-group group-id="GitRepositoryActions" anchor="after" relative-to-action="com.cnsharp.ext.git.DeleteBranchesAction"/>
+        </action>
+        <action id="com.cnsharp.ext.git.ExportChangedFilesAction"
+                class="com.cnsharp.ext.git.ExportChangedFilesAction"
+                text="Export Changed Files..."
+                description="Export files changed between two selected commits">
+            <add-to-group group-id="Vcs.Log.ContextMenu" anchor="last"/>
         </action>
     </actions>
 </idea-plugin>
