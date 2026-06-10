@@ -55,7 +55,7 @@ Exports all files changed between a range of commits in Git Log.
 
 ## Requirements
 
-- IntelliJ Platform 2024.1+
+- IntelliJ Platform 2020.3+
 - Git4Idea plugin (bundled with all JetBrains IDEs)
 
 ## Build
