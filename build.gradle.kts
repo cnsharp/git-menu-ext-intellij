@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.cnsharp"
-version = "1.0.0"
+version = "1.0.1"
 
 repositories {
     mavenCentral()
@@ -27,7 +27,7 @@ tasks {
         kotlinOptions.jvmTarget = "17"
     }
     patchPluginXml {
-        sinceBuild.set("203")
+        sinceBuild.set("223")
         untilBuild.set("")
     }
 }
