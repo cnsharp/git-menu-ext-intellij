@@ -71,3 +71,5 @@ Output: `build/distributions/git-menu-ext-*.zip`
 ## Install
 
 **From disk:** Settings → Plugins → ⚙ → Install Plugin from Disk → select the zip file.
+
+**From marketplace:**  [https://plugins.jetbrains.com/plugin/32206-git-menu-ext/](https://plugins.jetbrains.com/plugin/32206-git-menu-ext/)
