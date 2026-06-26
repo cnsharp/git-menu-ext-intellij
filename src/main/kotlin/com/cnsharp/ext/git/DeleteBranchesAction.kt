@@ -10,10 +10,13 @@ import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.Messages
+import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBTextField
 import java.awt.BorderLayout
 import java.awt.Dimension
+import javax.swing.Box
+import javax.swing.BoxLayout
 import javax.swing.JComponent
 import javax.swing.JPanel
 
@@ -23,12 +26,14 @@ class DeleteBranchesAction : AnAction() {
 
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
-        val dialog = DeleteBranchesDialog(project)
+        val basePath = project.basePath ?: return
+        val hasRemotes = runGit("bash", "-c", "git branch -r", dir = basePath).output.isNotEmpty()
+        val dialog = DeleteBranchesDialog(project, hasRemotes)
         if (dialog.showAndGet()) {
             val keyword = dialog.keyword.trim()
             if (keyword.isNotEmpty()) {
                 PropertiesComponent.getInstance().setValue(KEY_KEYWORD, keyword)
-                deleteBranches(project, keyword)
+                deleteBranches(project, keyword, dialog.deleteRemote)
             }
         }
     }
@@ -37,7 +42,7 @@ class DeleteBranchesAction : AnAction() {
         e.presentation.isEnabledAndVisible = e.project != null
     }
 
-    private fun deleteBranches(project: Project, keyword: String) {
+    private fun deleteBranches(project: Project, keyword: String, deleteRemote: Boolean = false) {
         val basePath = project.basePath ?: return
 
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Delete Branches", false) {
@@ -67,13 +72,29 @@ class DeleteBranchesAction : AnAction() {
                         return
                     }
 
+                    // Find matching remote branches if needed
+                    val remoteBranchList = if (deleteRemote) {
+                        val remoteBranches = runGit("bash", "-c", "git branch -r | grep '$keyword'", dir = basePath).output
+                        remoteBranches.lines()
+                            .map { it.trim() }
+                            .filter { it.isNotEmpty() && !it.contains("HEAD ->") }
+                            .mapNotNull { remote ->
+                                // Convert "origin/foo" -> Pair("origin", "foo")
+                                val parts = remote.split("/", limit = 2)
+                                if (parts.size == 2) Pair(parts[0], parts[1]) else null
+                            }
+                    } else emptyList()
+
                     val skippedNote = if (currentBranch.contains(keyword)) "\n\n(Skipping current branch: $currentBranch)" else ""
+                    val remoteNote = if (remoteBranchList.isNotEmpty())
+                        "\n\nRemote branches to delete:\n${remoteBranchList.joinToString("\n") { "${it.first}/${it.second}" }}"
+                    else ""
 
                     var confirmed = false
                     ApplicationManager.getApplication().invokeAndWait {
                         val confirm = Messages.showOkCancelDialog(
                             project,
-                            "The following branches will be deleted:\n\n${branchList.joinToString("\n")}$skippedNote",
+                            "The following local branches will be deleted:\n\n${branchList.joinToString("\n")}$skippedNote$remoteNote",
                             "Confirm Branch Deletion",
                             "Delete",
                             "Cancel",
@@ -83,14 +104,26 @@ class DeleteBranchesAction : AnAction() {
                     }
                     if (!confirmed) return
 
-                    indicator.text = "Deleting branches..."
+                    indicator.text = "Deleting local branches..."
                     val result = runGit(*(listOf("git", "branch", "-D") + branchList).toTypedArray(), dir = basePath)
+
+                    if (deleteRemote && remoteBranchList.isNotEmpty()) {
+                        indicator.text = "Deleting remote branches..."
+                        // Group by remote name and batch delete per remote
+                        remoteBranchList.groupBy { it.first }.forEach { (remote, pairs) ->
+                            val refspecs = pairs.map { ":refs/heads/${it.second}" }
+                            runGit(*(listOf("git", "push", remote) + refspecs).toTypedArray(), dir = basePath)
+                        }
+                    }
 
                     refreshGitRepos(project)
 
                     ApplicationManager.getApplication().invokeLater {
                         if (result.exitCode == 0) {
-                            Messages.showInfoMessage(project, "Deleted branches:\n\n${result.output}", "Delete Branches")
+                            val remoteMsg = if (remoteBranchList.isNotEmpty())
+                                "\n\nRemote branches deleted:\n${remoteBranchList.joinToString("\n") { "${it.first}/${it.second}" }}"
+                            else ""
+                            Messages.showInfoMessage(project, "Deleted branches:\n\n${result.output}$remoteMsg", "Delete Branches")
                         } else {
                             Messages.showErrorDialog(project, "Error deleting branches:\n\n${result.output}", "Delete Branches")
                         }
@@ -105,13 +138,17 @@ class DeleteBranchesAction : AnAction() {
     }
 }
 
-class DeleteBranchesDialog(project: Project) : DialogWrapper(project) {
+class DeleteBranchesDialog(project: Project, hasRemotes: Boolean) : DialogWrapper(project) {
 
     private val textField = JBTextField(30).apply {
         text = PropertiesComponent.getInstance().getValue(KEY_KEYWORD, "")
     }
+    private val deleteRemoteCheckBox = JBCheckBox("Also delete remote branches (if any)").apply {
+        isEnabled = hasRemotes
+    }
 
     val keyword: String get() = textField.text
+    val deleteRemote: Boolean get() = deleteRemoteCheckBox.isSelected
 
     init {
         title = "Delete Branches"
@@ -119,10 +156,17 @@ class DeleteBranchesDialog(project: Project) : DialogWrapper(project) {
     }
 
     override fun createCenterPanel(): JComponent {
-        val panel = JPanel(BorderLayout(8, 8))
-        panel.preferredSize = Dimension(400, 60)
-        panel.add(JBLabel("Branch keyword (e.g. release-):"), BorderLayout.NORTH)
-        panel.add(textField, BorderLayout.CENTER)
+        val panel = JPanel()
+        panel.layout = BoxLayout(panel, BoxLayout.Y_AXIS)
+        panel.preferredSize = Dimension(400, 90)
+
+        val inputPanel = JPanel(BorderLayout(8, 4))
+        inputPanel.add(JBLabel("Branch keyword (e.g. release-):"), BorderLayout.NORTH)
+        inputPanel.add(textField, BorderLayout.CENTER)
+
+        panel.add(inputPanel)
+        panel.add(Box.createVerticalStrut(8))
+        panel.add(deleteRemoteCheckBox)
         return panel
     }
 

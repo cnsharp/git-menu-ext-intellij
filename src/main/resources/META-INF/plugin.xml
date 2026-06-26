@@ -15,6 +15,7 @@
     <depends>Git4Idea</depends>
 
     <extensions defaultExtensionNs="com.intellij">
+        <notificationGroup id="Git Menu Ext" displayType="BALLOON"/>
     </extensions>
 
     <actions>
@@ -31,6 +32,12 @@
                 description="Delete local branches that have no tracking remote">
             <add-to-group group-id="Git.MainMenu" anchor="after" relative-to-action="com.cnsharp.ext.git.DeleteBranchesAction"/>
             <add-to-group group-id="GitRepositoryActions" anchor="after" relative-to-action="com.cnsharp.ext.git.DeleteBranchesAction"/>
+        </action>
+        <action id="com.cnsharp.ext.git.CopyBranchNameAction"
+                class="com.cnsharp.ext.git.CopyBranchNameAction"
+                text="Copy Branch Name"
+                description="Copy the branch name to clipboard">
+            <add-to-group group-id="Git.Branch" anchor="last"/>
         </action>
         <action id="com.cnsharp.ext.git.ExportChangedFilesAction"
                 class="com.cnsharp.ext.git.ExportChangedFilesAction"
