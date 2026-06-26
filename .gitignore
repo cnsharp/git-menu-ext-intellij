@@ -6,4 +6,5 @@ build/
 .idea/
 out/
 .claude/
+.intellijPlatform/
 .DS_Store
