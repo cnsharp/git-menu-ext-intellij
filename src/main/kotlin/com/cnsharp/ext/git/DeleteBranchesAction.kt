@@ -164,8 +164,10 @@ class DeleteBranchesDialog(project: Project, hasRemotes: Boolean) : DialogWrappe
         inputPanel.add(JBLabel("Branch keyword (e.g. release-):"), BorderLayout.NORTH)
         inputPanel.add(textField, BorderLayout.CENTER)
 
+        inputPanel.alignmentX = JComponent.LEFT_ALIGNMENT
         panel.add(inputPanel)
         panel.add(Box.createVerticalStrut(8))
+        deleteRemoteCheckBox.alignmentX = JComponent.LEFT_ALIGNMENT
         panel.add(deleteRemoteCheckBox)
         return panel
     }
