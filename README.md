@@ -8,15 +8,24 @@ Compatible with all IntelliJ-based IDEs (IntelliJ IDEA, Rider, GoLand, WebStorm,
 
 ## Features
 
+### Copy Branch Name
+
+Copies the selected branch name to clipboard.
+
+**Location:** Branch context menu (right-click a branch) → Copy Branch Name
+
+---
+
 ### Delete Branches
 
-Deletes local branches matching a keyword.
+Deletes local branches matching a keyword. Optionally deletes matching remote branches as well.
 
-**Location:** Git menu → Delete Branches...
+**Location:** Git menu / Branches popup → Delete Branches...
 
 1. Enter a keyword (e.g. `release-`)
-2. Review the list of matched branches
-3. Confirm to delete
+2. Optionally check "Also delete remote branches"
+3. Review the list of matched branches
+4. Confirm to delete
 
 The current branch is always skipped. All matched branches are force-deleted (`-D`).
 
@@ -26,7 +35,7 @@ The current branch is always skipped. All matched branches are force-deleted (`-
 
 Lists and deletes local branches that have no tracking remote, or whose remote is gone.
 
-**Location:** Git menu → Delete Outdated Branches...
+**Location:** Git menu / Branches popup → Delete Outdated Branches...
 
 1. The plugin scans `git branch -vv` for branches with no remote or remote marked as `gone`
 2. A checklist dialog shows the candidates (branches not fully merged are marked with ⚠)
@@ -55,7 +64,7 @@ Exports all files changed between a range of commits in Git Log.
 
 ## Requirements
 
-- IntelliJ Platform 2020.3+
+- IntelliJ Platform 2022.3+
 - Git4Idea plugin (bundled with all JetBrains IDEs)
 
 ## Build
