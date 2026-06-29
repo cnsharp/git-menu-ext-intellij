@@ -1,21 +1,34 @@
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "1.9.25"
-    id("org.jetbrains.intellij") version "1.17.4"
+    id("org.jetbrains.intellij.platform") version "2.3.0"
 }
 
 group = "com.cnsharp"
-version = "1.1.1"
+version = "2.0.0"
 
 repositories {
     mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
 }
 
-intellij {
-    version.set("2024.1")
-    type.set("IC")
-    plugins.set(listOf("vcs-git"))
-    instrumentCode.set(false)
+dependencies {
+    intellijPlatform {
+        intellijIdeaCommunity("2024.3")
+        bundledPlugin("Git4Idea")
+    }
+}
+
+intellijPlatform {
+    instrumentCode = false
+    pluginConfiguration {
+        ideaVersion {
+            sinceBuild = "243"
+            untilBuild = provider { null }
+        }
+    }
 }
 
 tasks {
@@ -25,9 +38,5 @@ tasks {
     }
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         kotlinOptions.jvmTarget = "17"
-    }
-    patchPluginXml {
-        sinceBuild.set("223")
-        untilBuild.set("")
     }
 }
