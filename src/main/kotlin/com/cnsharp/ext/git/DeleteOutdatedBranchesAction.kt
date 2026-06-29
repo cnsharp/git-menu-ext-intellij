@@ -28,8 +28,13 @@ class DeleteOutdatedBranchesAction : AnAction() {
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Delete Outdated Branches", false) {
             override fun run(indicator: ProgressIndicator) {
                 try {
-                    indicator.text = "Fetching remote status..."
-                    runGit("git", "fetch", "--prune", dir = basePath)
+                    indicator.text = "Fetching all remote branches..."
+                    val fetchResult = runGit("git", "fetch", "--all", "--prune", dir = basePath)
+                    if (fetchResult.exitCode != 0) {
+                        ApplicationManager.getApplication().invokeLater {
+                            Messages.showWarningDialog(project, "Failed to fetch: ${fetchResult.output}\nContinuing with local data.", "Delete Outdated Branches")
+                        }
+                    }
 
                     indicator.text = "Scanning branches..."
                     val currentBranch = runGit("git", "rev-parse", "--abbrev-ref", "HEAD", dir = basePath).output
