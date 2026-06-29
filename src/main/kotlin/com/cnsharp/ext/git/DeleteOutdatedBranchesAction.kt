@@ -28,6 +28,9 @@ class DeleteOutdatedBranchesAction : AnAction() {
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Delete Outdated Branches", false) {
             override fun run(indicator: ProgressIndicator) {
                 try {
+                    indicator.text = "Fetching remote status..."
+                    runGit("git", "fetch", "--prune", dir = basePath)
+
                     indicator.text = "Scanning branches..."
                     val currentBranch = runGit("git", "rev-parse", "--abbrev-ref", "HEAD", dir = basePath).output
                     val vvLines = runGit("git", "branch", "-vv", dir = basePath).output.lines().filter { it.isNotBlank() }
@@ -40,9 +43,8 @@ class DeleteOutdatedBranchesAction : AnAction() {
                         val trimmed = line.trim()
                         val name = trimmed.removePrefix("* ").trim().split(Regex("\\s+")).firstOrNull() ?: return@mapNotNull null
                         if (name == currentBranch) return@mapNotNull null
-                        val hasTracking = Regex("\\[.*?]").containsMatchIn(trimmed)
                         val isGone = Regex("\\[.*?:\\s*gone]").containsMatchIn(trimmed)
-                        if (!hasTracking || isGone) OutdatedBranch(name, mergedBranches.contains(name)) else null
+                        if (isGone) OutdatedBranch(name, mergedBranches.contains(name)) else null
                     }
 
                     if (outdated.isEmpty()) {
@@ -113,7 +115,7 @@ class DeleteOutdatedBranchesDialog(
         val panel = JPanel(BorderLayout(8, 8))
         panel.preferredSize = Dimension(520, 320)
         panel.add(
-            JBLabel("Branches with no tracking remote (⚠ = not fully merged into current branch):"),
+            JBLabel("Branches whose remote tracking is gone (⚠ = not fully merged):"),
             BorderLayout.NORTH
         )
         panel.add(JBScrollPane(checkBoxList), BorderLayout.CENTER)
