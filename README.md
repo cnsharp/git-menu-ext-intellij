@@ -33,11 +33,11 @@ The current branch is always skipped. All matched branches are force-deleted (`-
 
 ### Delete Outdated Branches
 
-Lists and deletes local branches that have no tracking remote, or whose remote is gone.
+Lists and deletes local branches whose remote is gone.
 
 **Location:** Git menu / Branches popup → Delete Outdated Branches...
 
-1. The plugin scans `git branch -vv` for branches with no remote or remote marked as `gone`
+1. The plugin scans `git branch -vv` for branches with remote marked as `gone`
 2. A checklist dialog shows the candidates (branches not fully merged are marked with ⚠)
 3. Select branches to delete and confirm
    - Fully merged branches are deleted with `-d`
